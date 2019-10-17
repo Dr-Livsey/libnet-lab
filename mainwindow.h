@@ -18,6 +18,9 @@ public:
     MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
 
+public slots:
+    void send_packet();
+
 private:
     Ui::MainWindow *ui;
     std::unique_ptr<LibnetWrapper> netlib_wrapper;

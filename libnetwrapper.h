@@ -9,6 +9,8 @@
 #include <QVector>
 #include <QString>
 
+class TCPHeader;
+
 class LibnetWrapperException : public std::runtime_error
 {
 public:
@@ -22,13 +24,12 @@ private:
     std::string title, msg;
 };
 
-
-
 class LibnetWrapper
 {
 public:
     LibnetWrapper( const char *dev_name );
 
+    static void build_tcp_header(const libnet_tcp_hdr &, const QString &payload);
     static QVector<QString> get_alldevs( void );
 
     ~LibnetWrapper();

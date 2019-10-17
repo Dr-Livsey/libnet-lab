@@ -1,5 +1,7 @@
-#include "libnetwrapper.h"
+#include "proto.h"
+
 #include <QMessageBox>
+#include <QDebug>
 
 
 LibnetWrapper::LibnetWrapper(const char *dev_name)
@@ -13,6 +15,11 @@ LibnetWrapper::LibnetWrapper(const char *dev_name)
     else{
         throw LibnetWrapperException("libnet_init()", std::string("Successfully bind to \"") + dev_name + "\" device!");
     }
+}
+
+void LibnetWrapper::build_tcp_header(const libnet_tcp_hdr &tcp_hdr, const QString &payload_str )
+{
+    qDebug() << "build tcp header ";
 }
 
 QVector<QString> LibnetWrapper::get_alldevs()
