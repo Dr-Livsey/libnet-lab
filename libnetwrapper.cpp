@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "libnetheader.h"
 
 #include <QMessageBox>
 #include <QDebug>
@@ -152,9 +153,6 @@ uint32_t LibnetWrapper::write()
     {
         throw LibnetWrapperException("libnet_write()", last_error().toStdString());
     }
-    else {
-        clear_packet();
-    }
 
     return static_cast<uint32_t>(bytes_written);
 }
@@ -188,6 +186,15 @@ QString LibnetWrapper::get_own_ipv4()
 void LibnetWrapper::clear_packet()
 {
     libnet_clear_packet(libnet_context);
+}
+
+void LibnetWrapper::build_packet(LibnetIPv4Header *ipv4_hdr, LibnetHeader *upper_layer_hdr)
+{
+    /*Build transport layer*/
+    upper_layer_hdr->build(*this);
+
+    /*Build network layer*/
+    ipv4_hdr->build(*this, upper_layer_hdr);
 }
 
 QVector<QString>

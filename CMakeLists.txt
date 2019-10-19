@@ -20,8 +20,12 @@ add_executable(libnet-lab
   mainwindow.ui
   libnetwrapper.cpp
   libnetwrapper.h
+  libnetheader.cpp
+  libnetheader.h
   proto.cpp
   proto.h
+  packet.cpp
+  packet.h
 )
 
 target_link_libraries(libnet-lab

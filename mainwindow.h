@@ -9,6 +9,7 @@ namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
 
 class LibnetWrapper;
+class QListWidgetItem;
 
 class MainWindow : public QMainWindow
 {
@@ -20,6 +21,15 @@ public:
 
 public slots:
     void send_packet();
+
+private slots:
+    void on_AddToQueueButton_clicked();
+
+    void on_SendAllPacketsButton_clicked();
+
+    void on_ClearQueueButton_clicked();
+
+    void on_PacketsQueueListWidget_itemDoubleClicked(QListWidgetItem *item);
 
 private:
     Ui::MainWindow *ui;

@@ -9,7 +9,8 @@
 #include <QVector>
 #include <QString>
 
-class TCPHeader;
+class LibnetIPv4Header;
+class LibnetHeader;
 
 class LibnetWrapperException : public std::runtime_error
 {
@@ -47,6 +48,7 @@ public:
     QString         last_error();
     QString         get_own_ipv4();
     void            clear_packet();
+    void            build_packet(LibnetIPv4Header *, LibnetHeader *);
 
     static QVector<QString> get_alldevs( void );
 

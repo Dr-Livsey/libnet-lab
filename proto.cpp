@@ -1,5 +1,3 @@
-#include "proto.h"
-
 #include <QDebug>
 #include <QLineEdit>
 #include <QCheckBox>
@@ -7,38 +5,33 @@
 #include <QRadioButton>
 #include <iostream>
 
-TCPHeader::TCPHeader(QWidget *parent) : QWidget(parent), TransportHeader()
+#include "libnetheader.h"
+#include "proto.h"
+
+TCPHeader::TCPHeader(QWidget *parent) : QWidget(parent), Header()
 {
-    clear();
-    type = 0x06;
-    size_h = LIBNET_TCP_H;
-    payload = "";
+    /**/
 }
 
-UDPHeader::UDPHeader(QWidget *parent) : QWidget(parent), TransportHeader()
+UDPHeader::UDPHeader(QWidget *parent) : QWidget(parent), Header()
 {
-    clear();
-    type = 0x11;
-    size_h = LIBNET_UDP_H;
-    payload = "";
+    /**/
 }
 
-ICMPHeader::ICMPHeader(QWidget *parent) : QWidget(parent), TransportHeader()
+ICMPHeader::ICMPHeader(QWidget *parent) : QWidget(parent), Header()
 {
-    clear();
-    type = 0x01;
-    size_h = LIBNET_ICMPV4_ECHO_H;
-    payload = "";
+    /**/
 }
 
 IPv4Header::IPv4Header(QWidget *parent) : QWidget(parent)
 {
-    clear();
+    /**/
 }
 
-void TCPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &payload_field )
+LibnetHeader*
+TCPHeader::parse( const QString &payload )
 {
-    payload = payload_field;
+    libnet_tcp_hdr info;
 
     try
     {
@@ -85,18 +78,19 @@ void TCPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &p
             else if ( flag->objectName() == "fin" )
                 info.th_flags |= TH_FIN;
         }
-
-        context->build_tcp_header(this->info, payload);
     }
     catch (const std::exception &ex)
     {
         throw LibnetWrapperException("TCP Fields cast", ex.what());
     }
+
+    return new LibnetTCPHeader(info, payload);
 }
 
-void UDPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &payload_field )
+LibnetHeader*
+UDPHeader::parse( const QString &payload )
 {
-    payload = payload_field;
+    libnet_udp_hdr info;
 
     try
     {
@@ -110,18 +104,19 @@ void UDPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &p
             else if ( field->objectName() == "checksum_udp_line" )
                 info.uh_sum     =   static_cast<uint16_t>(std::stoul(field->text().toStdString()));
         }
-
-        context->build_udp_header(this->info, payload);
     }
     catch (const std::exception &ex)
     {
         throw LibnetWrapperException("UDP Fields cast", ex.what());
     }
+
+    return new LibnetUDPHeader(info, payload);
 }
 
-void ICMPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &payload_field )
+LibnetHeader*
+ICMPHeader::parse( const QString &payload )
 {
-    payload = payload_field;
+    LibnetWrapper::icmpv4_echo_hdr info;
 
     try
     {
@@ -145,22 +140,22 @@ void ICMPHeader::build( std::unique_ptr<LibnetWrapper> &context, const QString &
             else if ( icmp_type->objectName() == "reply_radio_b")
                 info.type = ICMP_ECHOREPLY;
         }
-
-        context->build_icmp_header(this->info, payload);
     }
     catch (const std::exception &ex)
     {
         throw LibnetWrapperException("ICMP Fields cast", ex.what());
     }
+
+    return new LibnetICMPHeader(info, payload);
 }
 
-void IPv4Header::build( std::unique_ptr<LibnetWrapper> &context, TransportHeader *transport_header )
+LibnetIPv4Header*
+IPv4Header::parse( std::unique_ptr<LibnetWrapper> &context )
 {
-    uint16_t th_len  = static_cast<uint16_t>(transport_header->get_size());
-    uint8_t  th_type = static_cast<uint8_t>(transport_header->get_type());
+    libnet_ipv4_hdr info;
 
-    info.ip_len = LIBNET_IPV4_H + th_len;
-    info.ip_p   = th_type;
+    info.ip_len = 0;
+    info.ip_p   = 0;
 
     try
     {
@@ -194,44 +189,11 @@ void IPv4Header::build( std::unique_ptr<LibnetWrapper> &context, TransportHeader
             else if ( flag->objectName() == "ecn_line" )
                 info.ip_tos |= (0b00000011 & static_cast<uint8_t>(std::stoul(flag->text().toStdString())));
         }
-
-        context->build_ipv4_header(this->info);
     }
     catch ( const std::exception &ex )
     {
         throw LibnetWrapperException("IPv4 Fields cast", ex.what());
     }
-}
 
-void IPv4Header::clear()
-{
-    memset(&info, 0, sizeof(info));
-}
-
-void TCPHeader::clear()
-{
-    memset(&info, 0, sizeof(info));
-    payload.clear();
-}
-
-void UDPHeader::clear()
-{
-    memset(&info, 0, sizeof(info));
-    payload.clear();
-}
-
-void ICMPHeader::clear()
-{
-    memset(&info, 0, sizeof(info));
-    payload.clear();
-}
-
-uint32_t TransportHeader::get_size()
-{
-    return size_h;
-}
-
-uint32_t TransportHeader::get_type()
-{
-    return type;
+    return new LibnetIPv4Header(info);
 }
