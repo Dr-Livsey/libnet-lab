@@ -1,4 +1,5 @@
 #include "proto.h"
+#include "packet.h"
 #include "libnetheader.h"
 
 #include <QMessageBox>
@@ -195,6 +196,15 @@ void LibnetWrapper::build_packet(LibnetIPv4Header *ipv4_hdr, LibnetHeader *upper
 
     /*Build network layer*/
     ipv4_hdr->build(*this, upper_layer_hdr);
+}
+
+uint32_t LibnetWrapper::write_packet(const RawPacket *raw_packet)
+{
+    // Build raw packet
+    this->build_packet(raw_packet->get_ipv4_hdr(), raw_packet->get_transport_hdr());
+
+    // Write packet to wire
+    return this->write();
 }
 
 QVector<QString>

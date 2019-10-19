@@ -62,6 +62,9 @@ MainWindow::MainWindow(QWidget *parent)
 MainWindow::~MainWindow()
 {
     delete ui;
+
+    // Clear packets queue
+    on_ClearQueueButton_clicked();
 }
 
 void MainWindow::send_packet()
@@ -108,11 +111,15 @@ void MainWindow::send_packet()
 
 void MainWindow::on_AddToQueueButton_clicked()
 {
+    QTabWidget *Tl_tabwidget = ui->TransportLayerTabWidget;
+
     // Current transport layer widget
-    QWidget *current_tl_widget = ui->TransportLayerTabWidget->currentWidget();
+    QWidget *current_tl_widget = Tl_tabwidget->currentWidget();
+    QString  current_tl_name   = Tl_tabwidget->tabText(Tl_tabwidget->indexOf(current_tl_widget));
 
     // Get network layer header pointer
     IPv4Header *ipv4_header  = ui->NetworkLayerWidget;
+    // Get transport layer header pointer
     Header *transport_header = dynamic_cast<Header*>(current_tl_widget);
 
     QString payload = ui->payload_text->toPlainText();
@@ -121,15 +128,23 @@ void MainWindow::on_AddToQueueButton_clicked()
 
     try
     {
+        // Redundent check
+        if (transport_header == nullptr){
+            throw LibnetWrapperException(
+                    "on_AddToQueueButton_clicked()", "Bad dynamic cast Header -> Transport Header");
+        }
+
         // Create raw packet
         raw_packet = new RawPacket(ipv4_header->parse(netlib_wrapper), transport_header->parse(payload));
 
         QListWidgetItem *packet_qlw = raw_packet->as_QLItem();
 
+        // Packet number in queue
+        std::string packet_num = std::to_string(ui->PacketsQueueListWidget->count());
+
         // Set packet name
-        packet_qlw->setText(QString::fromStdString("Packet ") +
-                            current_tl_widget->objectName()   + " #" +
-                            QString(ui->PacketsQueueListWidget->count()));
+        packet_qlw->setText(QString::fromStdString("Packet ") + current_tl_name   + " #" +
+                            QString::fromStdString(packet_num));
 
         // Add item to packets queue
         ui->PacketsQueueListWidget->addItem(packet_qlw);
@@ -144,33 +159,61 @@ void MainWindow::on_AddToQueueButton_clicked()
 
 void MainWindow::on_SendAllPacketsButton_clicked()
 {
+    for (int i = 0; i < ui->PacketsQueueListWidget->count(); i++)
+    {
+       QListWidgetItem *item       = ui->PacketsQueueListWidget->item(i);
+       const RawPacket *raw_packet = RawPacket::from_QLItem(item);
 
+        try
+        {
+           // Write packet to wire
+           netlib_wrapper->write_packet(raw_packet);
+        }
+        catch ( const LibnetWrapperException &libnet_ex )
+        {
+            libnet_ex.show_msg();
+        }
+
+        // Delete packet
+        delete raw_packet;
+        //Clear
+        netlib_wrapper->clear_packet();
+    }
+    // Clear queue
+    ui->PacketsQueueListWidget->clear();
 }
 
 void MainWindow::on_ClearQueueButton_clicked()
 {
+    for (int i = 0; i < ui->PacketsQueueListWidget->count(); i++)
+    {
+       QListWidgetItem *item = ui->PacketsQueueListWidget->item(i);
 
+       // Clear raw packet data
+       delete RawPacket::from_QLItem(item);
+    }
+    // Clear queue
+    ui->PacketsQueueListWidget->clear();
 }
 
 void MainWindow::on_PacketsQueueListWidget_itemDoubleClicked(QListWidgetItem *item)
 {
-    const RawPacket *raw_packet = item->data(Qt::UserRole).value<const RawPacket*>();
+    const RawPacket *raw_packet = RawPacket::from_QLItem(item);
 
     try
     {
-        // Build raw packet
-        raw_packet->build(netlib_wrapper);
-
-        // Write packet to wire
-        netlib_wrapper->write();
+       // Write packet to wire
+       netlib_wrapper->write_packet(raw_packet);
     }
     catch ( const LibnetWrapperException &libnet_ex )
     {
         libnet_ex.show_msg();
-        return;
     }
 
     // Delete pointers;
     delete raw_packet;
     delete ui->PacketsQueueListWidget->takeItem(ui->PacketsQueueListWidget->row(item));
+
+    //Clear packet
+    netlib_wrapper->clear_packet();
 }

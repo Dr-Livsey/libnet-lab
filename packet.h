@@ -12,8 +12,13 @@ class RawPacket
 public:
     RawPacket(LibnetIPv4Header *ipv4_hdr, LibnetHeader *t_hdr);
 
-    QListWidgetItem*    as_QLItem() const;
+    QListWidgetItem*           as_QLItem() const;
+    static const RawPacket*    from_QLItem(QListWidgetItem *);
+
     void                build( std::unique_ptr<LibnetWrapper> &) const;
+
+    LibnetIPv4Header*   get_ipv4_hdr() const;
+    LibnetHeader*       get_transport_hdr() const;
 
     ~RawPacket();
 private:

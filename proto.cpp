@@ -32,6 +32,7 @@ LibnetHeader*
 TCPHeader::parse( const QString &payload )
 {
     libnet_tcp_hdr info;
+    memset(&info, 0, sizeof(info));
 
     try
     {
@@ -91,6 +92,7 @@ LibnetHeader*
 UDPHeader::parse( const QString &payload )
 {
     libnet_udp_hdr info;
+    memset(&info, 0, sizeof(info));
 
     try
     {
@@ -117,6 +119,7 @@ LibnetHeader*
 ICMPHeader::parse( const QString &payload )
 {
     LibnetWrapper::icmpv4_echo_hdr info;
+    memset(&info, 0, sizeof(info));
 
     try
     {
@@ -153,9 +156,7 @@ LibnetIPv4Header*
 IPv4Header::parse( std::unique_ptr<LibnetWrapper> &context )
 {
     libnet_ipv4_hdr info;
-
-    info.ip_len = 0;
-    info.ip_p   = 0;
+    memset(&info, 0, sizeof(info));
 
     try
     {

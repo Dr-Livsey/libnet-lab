@@ -11,6 +11,7 @@
 
 class LibnetIPv4Header;
 class LibnetHeader;
+class RawPacket;
 
 class LibnetWrapperException : public std::runtime_error
 {
@@ -49,6 +50,7 @@ public:
     QString         get_own_ipv4();
     void            clear_packet();
     void            build_packet(LibnetIPv4Header *, LibnetHeader *);
+    uint32_t        write_packet(const RawPacket*);
 
     static QVector<QString> get_alldevs( void );
 

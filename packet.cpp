@@ -22,10 +22,27 @@ QListWidgetItem *RawPacket::as_QLItem() const
     return packet_qlw;
 }
 
+const RawPacket *RawPacket::from_QLItem(QListWidgetItem *item)
+{
+    return item->data(Qt::UserRole).value<const RawPacket*>();
+}
+
 void
 RawPacket::build( std::unique_ptr<LibnetWrapper> &netlib_wrapper ) const
 {
     netlib_wrapper->build_packet(ipv4_hdr, t_hdr);
+}
+
+LibnetIPv4Header*
+RawPacket::get_ipv4_hdr() const
+{
+    return ipv4_hdr;
+}
+
+LibnetHeader*
+RawPacket::get_transport_hdr() const
+{
+    return t_hdr;
 }
 
 RawPacket::~RawPacket()
