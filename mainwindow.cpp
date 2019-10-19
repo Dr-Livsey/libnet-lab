@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     ui->send_packet_button->setDisabled(true);
     ui->get_ip_button->setDisabled(true);
+    ui->AddToQueueButton->setDisabled(true);
 
     //Add devs names to QListWidget
     for ( auto dev_name : LibnetWrapper::get_alldevs() ){
@@ -41,6 +42,7 @@ MainWindow::MainWindow(QWidget *parent)
         ui->cur_dev_line->setText(item->text());
         ui->send_packet_button->setEnabled(true);
         ui->get_ip_button->setEnabled(true);
+        ui->AddToQueueButton->setEnabled(true);
     });
 
     //Connect 'Send Packet' button to appropriate slot
